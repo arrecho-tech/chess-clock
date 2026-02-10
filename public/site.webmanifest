@@ -1,6 +1,8 @@
 {
   "name": "Chess Clock",
   "short_name": "Chess Clock",
+  "description": "A minimal chess clock with increment support, dark mode, and optional vibration.",
+  "start_url": "/",
   "icons": [
     {
       "src": "/android-chrome-192.png",
