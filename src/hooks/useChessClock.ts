@@ -47,6 +47,24 @@ export const formatTime = (totalSeconds: number) => {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
 }
 
+const setScrollLock = (locked: boolean) => {
+  const html = document.documentElement
+  const body = document.body
+
+  if (locked) {
+    html.style.overscrollBehavior = "none"
+    body.style.overflow = "hidden"
+    body.style.touchAction = "none"
+    body.style.overscrollBehavior = "none"
+    return
+  }
+
+  html.style.overscrollBehavior = ""
+  body.style.overflow = ""
+  body.style.touchAction = ""
+  body.style.overscrollBehavior = ""
+}
+
 export function useChessClock() {
   const [settings, setSettings] = useState<Settings>(defaultSettings)
   const [setup, setSetup] = useState<Settings>(defaultSettings)
@@ -111,6 +129,41 @@ export function useChessClock() {
 
   useEffect(() => {
     localStorage.setItem(FULLSCREEN_KEY, String(fullscreen))
+  }, [fullscreen])
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      const isFullscreen = Boolean(document.fullscreenElement)
+      setFullscreen(isFullscreen)
+      setScrollLock(isFullscreen)
+    }
+
+    document.addEventListener("fullscreenchange", onFullscreenChange)
+    onFullscreenChange()
+
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange)
+      setScrollLock(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    const root = document.documentElement
+
+    if (fullscreen) {
+      if (!document.fullscreenElement) {
+        root.requestFullscreen().catch(() => {
+          setFullscreen(false)
+        })
+      }
+      return
+    }
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {
+        // ignore failed exits
+      })
+    }
   }, [fullscreen])
 
   useEffect(() => {

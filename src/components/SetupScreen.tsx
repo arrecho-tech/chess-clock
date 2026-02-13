@@ -20,8 +20,8 @@ export function SetupScreen({
   onSave,
 }: SetupScreenProps) {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex min-h-screen w-full max-w-2xl items-center justify-center p-4">
+    <div className="h-full w-full bg-background text-foreground">
+      <div className="mx-auto flex h-full w-full max-w-2xl items-center justify-center p-4">
         <Card className="w-full">
           <CardHeader>
             <CardTitle className="text-2xl">Chess Clock Setup</CardTitle>

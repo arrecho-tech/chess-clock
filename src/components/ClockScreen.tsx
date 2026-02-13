@@ -45,11 +45,11 @@ export function ClockScreen({
     hasStarted && ((activePlayer === "p1" && times.p1 === 0) || (activePlayer === "p2" && times.p2 === 0))
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="h-full w-full bg-background text-foreground">
       <div
         className={cn(
-          "mx-auto flex min-h-screen w-full flex-col gap-6",
-          fullscreen ? "max-w-full p-2" : "max-w-5xl p-4",
+          "mx-auto flex h-full w-full flex-col",
+          fullscreen ? "max-w-full gap-2 overflow-hidden p-2" : "max-w-5xl gap-6 p-4",
         )}
       >
         {!fullscreen && (
@@ -106,7 +106,12 @@ export function ClockScreen({
           </header>
         )}
 
-        <div className={cn("grid gap-4 md:grid-cols-2", fullscreen && "flex-1")}>
+        <div
+          className={cn(
+            "grid min-h-0 gap-4 md:grid-cols-2",
+            fullscreen && "flex-1 overflow-hidden",
+          )}
+        >
           {(
             [
               { key: "p1" as const, label: "Player 1", time: times.p1 },
@@ -140,8 +145,8 @@ export function ClockScreen({
                 onClick={onClick}
                 disabled={disabled}
                 className={cn(
-                  "transition",
-                  fullscreen && "flex-1",
+                  "min-h-0 transition",
+                  fullscreen && "flex h-full flex-1",
                   !hasStarted
                     ? "cursor-pointer"
                     : canSwitch
@@ -151,8 +156,8 @@ export function ClockScreen({
               >
                 <Card
                   className={cn(
-                    "flex h-full flex-col items-center justify-center gap-4 px-6 text-center transition",
-                    fullscreen ? "min-h-full py-16" : "min-h-[200px] py-10",
+                    "flex h-full min-h-0 flex-col items-center justify-center gap-4 px-6 text-center transition",
+                    fullscreen ? "py-12" : "min-h-[200px] py-10",
                     !hasStarted
                       ? "border-border bg-card text-foreground"
                       : isActive
