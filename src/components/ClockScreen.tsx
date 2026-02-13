@@ -70,40 +70,42 @@ export function ClockScreen({
         {!fullscreen && (
           <header className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h1 className="flex items-center gap-2 text-xl font-semibold">
-                <svg aria-hidden="true" viewBox="0 0 512 512" className="h-5 w-5">
-                  <path
-                    fill="currentColor"
-                    transform="translate(96 0)"
-                    d="M264 136c0 37.1-19.4 69.6-48.6 88H224c17.7 0 32 14.3 32 32s-14.3 32-32 32c0 96 24 128 24 128H72s24-32 24-128c-17.7 0-32-14.3-32-32s14.3-32 32-32h8.5C75.4 205.6 56 173.1 56 136C56 78.6 102.6 32 160 32s104 46.6 104 104zM32 448H288c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32z"
-                  />
-                </svg>
-                Chess Clock
-              </h1>
-              <details className="group relative mt-2 w-fit">
-                <summary className="list-none">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
+              <div className="flex items-center gap-2">
+                <h1 className="flex items-center gap-2 text-xl font-semibold">
+                  <svg aria-hidden="true" viewBox="0 0 512 512" className="h-5 w-5">
+                    <path
+                      fill="currentColor"
+                      transform="translate(96 0)"
+                      d="M264 136c0 37.1-19.4 69.6-48.6 88H224c17.7 0 32 14.3 32 32s-14.3 32-32 32c0 96 24 128 24 128H72s24-32 24-128c-17.7 0-32-14.3-32-32s14.3-32 32-32h8.5C75.4 205.6 56 173.1 56 136C56 78.6 102.6 32 160 32s104 46.6 104 104zM32 448H288c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32z"
+                    />
+                  </svg>
+                  Chess Clock
+                </h1>
+
+                <details className="group relative">
+                  <summary
                     aria-label="Instructions"
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    title="Instructions"
+                    className="list-none cursor-pointer select-none text-muted-foreground hover:text-foreground"
                   >
-                    <span aria-hidden="true" className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-current text-[11px] font-semibold leading-none">
+                    <span
+                      aria-hidden="true"
+                      className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-current text-[11px] font-semibold leading-none"
+                    >
                       i
                     </span>
-                  </Button>
-                </summary>
-                <div className="absolute left-0 top-full z-20 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-lg border border-border bg-card p-3 text-sm text-foreground shadow-lg">
-                  <div className="font-medium">How to use</div>
-                  <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
-                    <li>Tap either clock to start.</li>
-                    <li>Tap the active clock (or press Space) to switch turns.</li>
-                    <li>Use Settings to change times/increment.</li>
-                  </ul>
-                  <div className="mt-2 text-xs text-muted-foreground">Tip: tap outside to close on mobile.</div>
-                </div>
-              </details>
+                  </summary>
+                  <div className="absolute left-0 top-full z-20 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-lg border border-border bg-card p-3 text-sm text-foreground shadow-lg">
+                    <div className="font-medium">How to use</div>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
+                      <li>Tap either clock to start.</li>
+                      <li>Tap the active clock (or press Space) to switch turns.</li>
+                      <li>Use Settings to change times/increment.</li>
+                    </ul>
+                    <div className="mt-2 text-xs text-muted-foreground">Tip: tap outside to close on mobile.</div>
+                  </div>
+                </details>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" onClick={onMuteToggle}>
