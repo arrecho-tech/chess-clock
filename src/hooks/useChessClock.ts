@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
+const safeParseJson = <T,>(value: string | null): T | null => {
+  if (!value) return null
+  try {
+    return JSON.parse(value) as T
+  } catch {
+    return null
+  }
+}
+
 export type Settings = {
   p1Minutes: number
   p1Seconds: number
@@ -66,57 +75,46 @@ const setScrollLock = (locked: boolean) => {
 }
 
 export function useChessClock() {
-  const [settings, setSettings] = useState<Settings>(defaultSettings)
-  const [setup, setSetup] = useState<Settings>(defaultSettings)
-  const [showSetup, setShowSetup] = useState(true)
+  const [settings, setSettings] = useState<Settings>(() => {
+    const parsed = safeParseJson<Settings>(localStorage.getItem(SETTINGS_KEY))
+    return parsed ?? defaultSettings
+  })
+
+  const [setup, setSetup] = useState<Settings>(() => {
+    const parsed = safeParseJson<Settings>(localStorage.getItem(SETTINGS_KEY))
+    return parsed ?? defaultSettings
+  })
+
+  const [showSetup, setShowSetup] = useState(() => {
+    const parsed = safeParseJson<Settings>(localStorage.getItem(SETTINGS_KEY))
+    return parsed ? false : true
+  })
 
   const [activePlayer, setActivePlayer] = useState<PlayerKey | null>(null)
   const [hasStarted, setHasStarted] = useState(false)
   const [isRunning, setIsRunning] = useState(false)
-  const [times, setTimes] = useState({
-    p1: toSeconds(defaultSettings.p1Minutes, defaultSettings.p1Seconds),
-    p2: toSeconds(defaultSettings.p2Minutes, defaultSettings.p2Seconds),
+  const [times, setTimes] = useState(() => {
+    const parsed = safeParseJson<Settings>(localStorage.getItem(SETTINGS_KEY))
+    const initial = parsed ?? defaultSettings
+    return {
+      p1: toSeconds(initial.p1Minutes, initial.p1Seconds),
+      p2: toSeconds(initial.p2Minutes, initial.p2Seconds),
+    }
   })
 
-  const [beeped, setBeeped] = useState<BeepState>(emptyBeepState)
-  const [muted, setMuted] = useState(false)
-  const [fullscreen, setFullscreen] = useState(false)
-  const [theme, setTheme] = useState<"light" | "dark">("light")
+  const [, setBeeped] = useState<BeepState>(emptyBeepState)
+  const beepedRef = useRef<BeepState>(emptyBeepState)
+
+  const [muted, setMuted] = useState(() => localStorage.getItem(MUTE_KEY) === "true")
+  const [fullscreen, setFullscreen] = useState(
+    () => localStorage.getItem(FULLSCREEN_KEY) === "true",
+  )
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    const storedTheme = localStorage.getItem(THEME_KEY)
+    return storedTheme === "dark" || storedTheme === "light" ? storedTheme : "light"
+  })
 
   const audioRef = useRef<AudioContext | null>(null)
-
-  useEffect(() => {
-    const stored = localStorage.getItem(SETTINGS_KEY)
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as Settings
-        setSettings(parsed)
-        setSetup(parsed)
-        setShowSetup(false)
-      } catch {
-        setSettings(defaultSettings)
-        setSetup(defaultSettings)
-        setShowSetup(true)
-      }
-    } else {
-      setShowSetup(true)
-    }
-
-    const storedTheme = localStorage.getItem(THEME_KEY)
-    if (storedTheme === "dark" || storedTheme === "light") {
-      setTheme(storedTheme)
-    }
-
-    const storedMute = localStorage.getItem(MUTE_KEY)
-    if (storedMute === "true") {
-      setMuted(true)
-    }
-
-    const storedFullscreen = localStorage.getItem(FULLSCREEN_KEY)
-    if (storedFullscreen === "true") {
-      setFullscreen(true)
-    }
-  }, [])
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark")
@@ -139,7 +137,6 @@ export function useChessClock() {
     }
 
     document.addEventListener("fullscreenchange", onFullscreenChange)
-    onFullscreenChange()
 
     return () => {
       document.removeEventListener("fullscreenchange", onFullscreenChange)
@@ -148,6 +145,7 @@ export function useChessClock() {
   }, [])
 
   useEffect(() => {
+    setScrollLock(fullscreen)
     const root = document.documentElement
 
     if (fullscreen) {
@@ -165,43 +163,6 @@ export function useChessClock() {
       })
     }
   }, [fullscreen])
-
-  useEffect(() => {
-    setTimes({
-      p1: toSeconds(settings.p1Minutes, settings.p1Seconds),
-      p2: toSeconds(settings.p2Minutes, settings.p2Seconds),
-    })
-    setActivePlayer(null)
-    setHasStarted(false)
-    setIsRunning(false)
-    setBeeped(emptyBeepState)
-  }, [settings])
-
-  useEffect(() => {
-    if (!isRunning) return
-    if (!activePlayer) return
-    const interval = window.setInterval(() => {
-      setTimes((prev) => {
-        if (activePlayer === "p1") {
-          return { ...prev, p1: Math.max(0, prev.p1 - 1) }
-        }
-        return { ...prev, p2: Math.max(0, prev.p2 - 1) }
-      })
-    }, 1000)
-
-    return () => window.clearInterval(interval)
-  }, [activePlayer, isRunning])
-
-  useEffect(() => {
-    if (!isRunning) return
-    if (!activePlayer) return
-    if (activePlayer === "p1" && times.p1 === 0) {
-      setIsRunning(false)
-    }
-    if (activePlayer === "p2" && times.p2 === 0) {
-      setIsRunning(false)
-    }
-  }, [activePlayer, isRunning, times.p1, times.p2])
 
   const playBeep = useCallback(
     (frequency = 520, duration = 0.08) => {
@@ -227,6 +188,62 @@ export function useChessClock() {
     },
     [muted],
   )
+
+  const resetBeeps = useCallback(() => {
+    beepedRef.current = emptyBeepState
+    setBeeped(emptyBeepState)
+  }, [])
+
+  useEffect(() => {
+    if (!isRunning) return
+    if (!activePlayer) return
+
+    const maybeBeepAt = (player: PlayerKey, nextTime: number) => {
+      if (nextTime <= 0) return
+
+      const playerState = beepedRef.current[player]
+
+      if (nextTime === 30 && !playerState.thirty) {
+        playBeep(460, 0.09)
+        const next: BeepState = {
+          ...beepedRef.current,
+          [player]: { ...playerState, thirty: true },
+        }
+        beepedRef.current = next
+        setBeeped(next)
+      }
+
+      if (nextTime === 10 && !playerState.ten) {
+        playBeep(620, 0.1)
+        const next: BeepState = {
+          ...beepedRef.current,
+          [player]: { ...playerState, ten: true },
+        }
+        beepedRef.current = next
+        setBeeped(next)
+      }
+    }
+
+    const interval = window.setInterval(() => {
+      setTimes((prev) => {
+        const current = activePlayer === "p1" ? prev.p1 : prev.p2
+        const nextTime = Math.max(0, current - 1)
+
+        maybeBeepAt(activePlayer, nextTime)
+
+        if (nextTime === 0) {
+          setIsRunning(false)
+        }
+
+        if (activePlayer === "p1") {
+          return { ...prev, p1: nextTime }
+        }
+        return { ...prev, p2: nextTime }
+      })
+    }, 1000)
+
+    return () => window.clearInterval(interval)
+  }, [activePlayer, isRunning, playBeep])
 
   const handleSwitch = useCallback(() => {
     if (!isRunning) return
@@ -267,34 +284,6 @@ export function useChessClock() {
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [handleSwitch])
 
-  const handleThreshold = useCallback(
-    (player: PlayerKey, timeLeft: number) => {
-      if (timeLeft <= 0) return
-      if (timeLeft === 30 && !beeped[player].thirty) {
-        playBeep(460, 0.09)
-        setBeeped((prev) => ({
-          ...prev,
-          [player]: { ...prev[player], thirty: true },
-        }))
-      }
-      if (timeLeft === 10 && !beeped[player].ten) {
-        playBeep(620, 0.1)
-        setBeeped((prev) => ({
-          ...prev,
-          [player]: { ...prev[player], ten: true },
-        }))
-      }
-    },
-    [beeped, playBeep],
-  )
-
-  useEffect(() => {
-    handleThreshold("p1", times.p1)
-  }, [handleThreshold, times.p1])
-
-  useEffect(() => {
-    handleThreshold("p2", times.p2)
-  }, [handleThreshold, times.p2])
 
   const handleSaveSetup = useCallback(() => {
     const normalized: Settings = {
@@ -315,8 +304,18 @@ export function useChessClock() {
     setSettings(normalized)
     setSetup(normalized)
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(normalized))
+
+    setTimes({
+      p1: toSeconds(normalized.p1Minutes, normalized.p1Seconds),
+      p2: toSeconds(normalized.p2Minutes, normalized.p2Seconds),
+    })
+    setActivePlayer(null)
+    setHasStarted(false)
+    setIsRunning(false)
+    resetBeeps()
+
     setShowSetup(false)
-  }, [setup])
+  }, [resetBeeps, setup])
 
   const openSetup = useCallback(() => {
     setIsRunning(false)
@@ -342,8 +341,8 @@ export function useChessClock() {
     setActivePlayer(null)
     setHasStarted(false)
     setIsRunning(false)
-    setBeeped(emptyBeepState)
-  }, [settings])
+    resetBeeps()
+  }, [resetBeeps, settings])
 
   const toggleRunning = useCallback(() => {
     if (!hasStarted) return
