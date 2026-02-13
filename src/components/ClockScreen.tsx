@@ -95,7 +95,7 @@ export function ClockScreen({
                       i
                     </span>
                   </summary>
-                  <div className="absolute left-1/2 top-full z-20 mt-2 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 rounded-lg border border-border bg-card p-3 text-sm text-foreground shadow-lg">
+                  <div className="fixed left-2 right-2 top-16 z-20 mt-2 rounded-lg border border-border bg-card p-3 text-sm text-foreground shadow-lg sm:absolute sm:left-1/2 sm:right-auto sm:top-full sm:mt-2 sm:w-[min(28rem,calc(100vw-2rem))] sm:-translate-x-1/2">
                     <div className="font-medium">How to use</div>
                     <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
                       <li>Tap either clock to start.</li>
@@ -155,7 +155,7 @@ export function ClockScreen({
                   i
                 </span>
               </summary>
-              <div className="absolute left-1/2 top-full z-20 mt-2 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 rounded-lg border border-border bg-card p-3 text-sm text-foreground shadow-lg">
+              <div className="fixed left-2 right-2 top-16 z-20 mt-2 rounded-lg border border-border bg-card p-3 text-sm text-foreground shadow-lg sm:absolute sm:left-1/2 sm:right-auto sm:top-full sm:mt-2 sm:w-[min(28rem,calc(100vw-2rem))] sm:-translate-x-1/2">
                 <div className="font-medium">How to use</div>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
                   <li>Tap the active clock (or press Space) to switch turns.</li>
