@@ -107,7 +107,7 @@ export function ClockScreen({
                 </details>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+            <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" onClick={onMuteToggle}>
                 {muted ? "Unmute" : "Mute"}
               </Button>
@@ -118,12 +118,8 @@ export function ClockScreen({
                 Settings
               </Button>
 
-              {hasStarted ? (
+              {hasStarted && (
                 <Button variant="outline" onClick={onReset}>
-                  Reset
-                </Button>
-              ) : (
-                <Button variant="outline" disabled className="invisible pointer-events-none" aria-hidden="true" tabIndex={-1}>
                   Reset
                 </Button>
               )}
@@ -169,33 +165,18 @@ export function ClockScreen({
                 </ul>
               </div>
             </details>
-            <div className="flex min-h-9 flex-wrap items-center justify-end gap-2 sm:flex-nowrap">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <Button variant="outline" size="sm" onClick={onMuteToggle}>
                 {muted ? "Unmute" : "Mute"}
               </Button>
-              {hasStarted ? (
+              {hasStarted && (
                 <Button variant="outline" size="sm" onClick={onReset}>
                   Reset
                 </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  className="invisible pointer-events-none"
-                  aria-hidden="true"
-                  tabIndex={-1}
-                >
-                  Reset
-                </Button>
               )}
-              {hasStarted ? (
-                <Button size="sm" className="w-[110px]" onClick={gameOver ? onReset : onToggleRunning}>
+              {hasStarted && (
+                <Button size="sm" onClick={gameOver ? onReset : onToggleRunning}>
                   {gameOver ? "New Game" : isRunning ? "Pause" : "Resume"}
-                </Button>
-              ) : (
-                <Button size="sm" className="invisible pointer-events-none w-[110px]" disabled aria-hidden="true" tabIndex={-1}>
-                  Resume
                 </Button>
               )}
               <Button variant="outline" size="sm" onClick={onFullscreenToggle}>
