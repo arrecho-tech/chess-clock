@@ -44,9 +44,10 @@ export function ClockScreen({
     <div className="h-full w-full bg-background text-foreground">
       <div
         className={cn(
-          "mx-auto flex h-full w-full flex-col",
-          fullscreen ? "max-w-full gap-2 overflow-hidden p-2" : "max-w-5xl gap-6 p-4",
+          "mx-auto flex h-full w-full flex-col overflow-hidden",
+          fullscreen ? "max-w-[1280px] gap-2 px-2 pb-2 sm:gap-3 sm:px-4 sm:pb-4" : "max-w-5xl gap-6 p-4",
         )}
+        style={fullscreen ? { paddingTop: "max(0.5rem, env(safe-area-inset-top))" } : undefined}
       >
         {!fullscreen && (
           <header className="flex flex-wrap items-center justify-between gap-3">
@@ -62,14 +63,14 @@ export function ClockScreen({
                 Chess Clock
               </h1>
               <p className="text-sm text-muted-foreground">
-                Tap either timer to start, then tap the active timer (or press
-                Space) to switch.
+                Tap either timer to start, then tap the active timer (or press Space) to switch.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" onClick={onMuteToggle}>
                 {muted ? "Unmute" : "Mute"}
-              </Button>              <Button variant="outline" onClick={onFullscreenToggle}>
+              </Button>
+              <Button variant="outline" onClick={onFullscreenToggle}>
                 {fullscreen ? "Exit Fullscreen" : "Fullscreen"}
               </Button>
               <Button variant="outline" onClick={onOpenSetup}>
@@ -98,10 +99,36 @@ export function ClockScreen({
           </header>
         )}
 
+        {fullscreen && (
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card/85 px-2 py-2 backdrop-blur supports-[backdrop-filter]:bg-card/70 sm:px-3">
+            <div className="text-xs text-muted-foreground sm:text-sm">Tap active clock (or Space) to switch</div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={onMuteToggle}>
+                {muted ? "Unmute" : "Mute"}
+              </Button>
+              {hasStarted && (
+                <Button variant="outline" size="sm" onClick={onReset}>
+                  Reset
+                </Button>
+              )}
+              {hasStarted && (
+                <Button size="sm" onClick={gameOver ? onReset : onToggleRunning}>
+                  {gameOver ? "New Game" : isRunning ? "Pause" : "Resume"}
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={onFullscreenToggle}>
+                Exit Fullscreen
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div
           className={cn(
-            "grid min-h-0 gap-4 md:grid-cols-2",
-            fullscreen && "flex-1 overflow-hidden",
+            "min-h-0 gap-4",
+            fullscreen
+              ? "grid h-full flex-1 grid-rows-2 gap-2 overflow-hidden md:grid-cols-2 md:grid-rows-1"
+              : "grid md:grid-cols-2",
           )}
         >
           {(
@@ -114,21 +141,11 @@ export function ClockScreen({
             const canSwitch = hasStarted && isActive && isRunning
             const canStart = !hasStarted && (times.p1 > 0 || times.p2 > 0)
 
-            const onClick = !hasStarted
-              ? () => onStartFrom(player.key)
-              : canSwitch
-                ? onSwitch
-                : undefined
+            const onClick = !hasStarted ? () => onStartFrom(player.key) : canSwitch ? onSwitch : undefined
 
             const disabled = !hasStarted ? !canStart : !canSwitch
 
-            const status = !hasStarted
-              ? "Ready"
-              : isActive
-                ? isRunning
-                  ? "Running"
-                  : "Paused"
-                : "Waiting"
+            const status = !hasStarted ? "Ready" : isActive ? (isRunning ? "Running" : "Paused") : "Waiting"
 
             return (
               <button
@@ -138,18 +155,14 @@ export function ClockScreen({
                 disabled={disabled}
                 className={cn(
                   "min-h-0 transition",
-                  fullscreen && "flex h-full flex-1",
-                  !hasStarted
-                    ? "cursor-pointer"
-                    : canSwitch
-                      ? "cursor-pointer"
-                      : "cursor-not-allowed",
+                  fullscreen && "flex h-full",
+                  !hasStarted ? "cursor-pointer" : canSwitch ? "cursor-pointer" : "cursor-not-allowed",
                 )}
               >
                 <Card
                   className={cn(
-                    "flex h-full min-h-0 flex-col items-center justify-center gap-4 px-6 text-center transition",
-                    fullscreen ? "py-12" : "min-h-[200px] py-10",
+                    "flex h-full min-h-0 w-full flex-col items-center justify-center gap-3 px-4 text-center transition sm:gap-4 sm:px-6",
+                    fullscreen ? "py-4 sm:py-8" : "min-h-[200px] py-10",
                     !hasStarted
                       ? "border-border bg-card text-foreground"
                       : isActive
@@ -157,50 +170,25 @@ export function ClockScreen({
                         : "border-border bg-muted/40 text-muted-foreground",
                   )}
                 >
-                  {!fullscreen && (
-                    <div className="text-sm uppercase tracking-[0.3em] text-muted-foreground">
-                      {player.label}
-                    </div>
-                  )}
+                  <div className={cn("text-sm uppercase tracking-[0.3em] text-muted-foreground", fullscreen && "text-xs sm:text-sm")}>
+                    {player.label}
+                  </div>
                   <div
                     className={cn(
-                      "font-semibold tabular-nums",
-                      fullscreen
-                        ? "text-7xl sm:text-8xl md:text-9xl"
-                        : "text-5xl sm:text-6xl md:text-7xl",
+                      "font-semibold tabular-nums leading-none",
+                      fullscreen ? "text-5xl sm:text-6xl lg:text-7xl xl:text-8xl" : "text-5xl sm:text-6xl md:text-7xl",
                     )}
                   >
                     {formatTime(player.time)}
                   </div>
-                  {!fullscreen && (
-                    <div className="text-sm text-muted-foreground">{status}</div>
-                  )}
+                  <div className={cn("text-sm text-muted-foreground", fullscreen && "text-xs sm:text-sm")}>{status}</div>
                 </Card>
               </button>
             )
           })}
         </div>
 
-        {fullscreen ? (
-          <div className="flex items-center justify-center gap-3 py-2">
-            <Button variant="outline" size="sm" onClick={onMuteToggle}>
-              {muted ? "Unmute" : "Mute"}
-            </Button>
-            {hasStarted && (
-              <Button variant="outline" size="sm" onClick={onReset}>
-                Reset
-              </Button>
-            )}
-            {hasStarted && (
-              <Button size="sm" onClick={gameOver ? onReset : onToggleRunning}>
-                {gameOver ? "New Game" : isRunning ? "Pause" : "Resume"}
-              </Button>
-            )}
-            <Button variant="outline" size="sm" onClick={onFullscreenToggle}>
-              Exit Fullscreen
-            </Button>
-          </div>
-        ) : (
+        {!fullscreen && (
           <footer className="mt-auto flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card/80 p-4 text-sm text-muted-foreground">
             <div>Increment: +{settings.increment}s</div>
             <div>
