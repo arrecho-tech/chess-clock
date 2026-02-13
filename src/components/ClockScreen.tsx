@@ -118,15 +118,11 @@ export function ClockScreen({
                 Settings
               </Button>
 
-              <Button
-                variant="outline"
-                onClick={onReset}
-                className={cn(!hasStarted && "invisible")}
-                aria-hidden={!hasStarted}
-                tabIndex={!hasStarted ? -1 : undefined}
-              >
-                Reset
-              </Button>
+              {hasStarted && (
+                <Button variant="outline" onClick={onReset}>
+                  Reset
+                </Button>
+              )}
 
               {hasStarted ? (
                 <Button className="w-[170px]" onClick={gameOver ? onReset : onToggleRunning}>
