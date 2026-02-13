@@ -28,6 +28,7 @@ function App() {
       times={clock.times}
       muted={clock.muted}
       fullscreen={clock.fullscreen}
+      pseudoFullscreen={clock.pseudoFullscreen}
       onMuteToggle={() => clock.setMuted((prev) => !prev)}
       onFullscreenToggle={() => clock.setFullscreen((prev) => !prev)}
       onOpenSetup={clock.openSetup}

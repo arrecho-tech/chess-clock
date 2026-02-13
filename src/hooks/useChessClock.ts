@@ -94,6 +94,14 @@ const setScrollLock = (locked: boolean) => {
   body.style.overscrollBehavior = ""
 }
 
+const isIOSBrowser = () => {
+  if (typeof navigator === "undefined") return false
+  const ua = navigator.userAgent.toLowerCase()
+  const platform = navigator.platform?.toLowerCase() ?? ""
+  const touchMac = platform.includes("mac") && navigator.maxTouchPoints > 1
+  return /iphone|ipad|ipod/.test(ua) || touchMac
+}
+
 export function useChessClock() {
   const [settings, setSettings] = useState<Settings>(() => {
     const parsed = safeParseJson<Partial<Settings>>(localStorage.getItem(SETTINGS_KEY))
@@ -129,9 +137,13 @@ export function useChessClock() {
   const [fullscreen, setFullscreen] = useState(
     () => localStorage.getItem(FULLSCREEN_KEY) === "true",
   )
+  const [pseudoFullscreen, setPseudoFullscreen] = useState(false)
   // theme is stored inside settings
 
   const audioRef = useRef<AudioContext | null>(null)
+  const fullscreenRef = useRef(fullscreen)
+  const pseudoFullscreenRef = useRef(pseudoFullscreen)
+  const iosRef = useRef(isIOSBrowser())
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", settings.theme === "dark")
@@ -142,18 +154,32 @@ export function useChessClock() {
   }, [muted])
 
   useEffect(() => {
+    fullscreenRef.current = fullscreen
     localStorage.setItem(FULLSCREEN_KEY, String(fullscreen))
   }, [fullscreen])
 
   useEffect(() => {
+    pseudoFullscreenRef.current = pseudoFullscreen
+  }, [pseudoFullscreen])
+
+  useEffect(() => {
     const onFullscreenChange = () => {
-      const isFullscreen = Boolean(document.fullscreenElement)
-      setFullscreen(isFullscreen)
-      setScrollLock(isFullscreen)
+      const isNativeFullscreen = Boolean(document.fullscreenElement)
+
+      if (isNativeFullscreen) {
+        setPseudoFullscreen(false)
+        setScrollLock(true)
+        return
+      }
+
+      if (fullscreenRef.current && !pseudoFullscreenRef.current && !iosRef.current) {
+        setFullscreen(false)
+      }
+
+      setScrollLock(pseudoFullscreenRef.current)
     }
 
     document.addEventListener("fullscreenchange", onFullscreenChange)
-    onFullscreenChange()
 
     return () => {
       document.removeEventListener("fullscreenchange", onFullscreenChange)
@@ -163,15 +189,31 @@ export function useChessClock() {
 
   useEffect(() => {
     const root = document.documentElement
+    const deferPseudo = (enabled: boolean) => {
+      queueMicrotask(() => setPseudoFullscreen(enabled))
+    }
 
     if (fullscreen) {
+      if (iosRef.current) {
+        deferPseudo(true)
+        setScrollLock(true)
+        return
+      }
+
       if (!document.fullscreenElement) {
         root.requestFullscreen().catch(() => {
-          setFullscreen(false)
+          setPseudoFullscreen(true)
+          setScrollLock(true)
         })
+      } else {
+        deferPseudo(false)
+        setScrollLock(true)
       }
       return
     }
+
+    deferPseudo(false)
+    setScrollLock(false)
 
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {
@@ -400,6 +442,7 @@ export function useChessClock() {
     times,
     muted,
     fullscreen,
+    pseudoFullscreen,
     theme: settings.theme,
     // Setters
     setSetup,

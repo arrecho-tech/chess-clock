@@ -12,6 +12,7 @@ type ClockScreenProps = {
   times: { p1: number; p2: number }
   muted: boolean
   fullscreen: boolean
+  pseudoFullscreen: boolean
   onMuteToggle: () => void
   onFullscreenToggle: () => void
   onOpenSetup: () => void
@@ -29,6 +30,7 @@ export function ClockScreen({
   times,
   muted,
   fullscreen,
+  pseudoFullscreen,
   onMuteToggle,
   onFullscreenToggle,
   onOpenSetup,
@@ -41,13 +43,29 @@ export function ClockScreen({
     hasStarted && ((activePlayer === "p1" && times.p1 === 0) || (activePlayer === "p2" && times.p2 === 0))
 
   return (
-    <div className="h-full w-full bg-background text-foreground">
+    <div
+      className={cn(
+        "h-full w-full bg-background text-foreground",
+        pseudoFullscreen && "fixed inset-0 z-50 h-[100dvh] min-h-[100svh] overflow-hidden",
+      )}
+    >
       <div
         className={cn(
           "mx-auto flex h-full w-full flex-col overflow-hidden",
-          fullscreen ? "max-w-[1280px] gap-2 px-2 pb-2 sm:gap-3 sm:px-4 sm:pb-4" : "max-w-5xl gap-6 p-4",
+          fullscreen
+            ? "max-w-[1280px] gap-2 px-2 pb-2 sm:gap-3 sm:px-4 sm:pb-4"
+            : "max-w-5xl gap-6 p-4",
         )}
-        style={fullscreen ? { paddingTop: "max(0.5rem, env(safe-area-inset-top))" } : undefined}
+        style={
+          fullscreen
+            ? {
+                paddingTop: "max(0.5rem, env(safe-area-inset-top))",
+                paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))",
+                paddingLeft: "max(0.5rem, env(safe-area-inset-left))",
+                paddingRight: "max(0.5rem, env(safe-area-inset-right))",
+              }
+            : undefined
+        }
       >
         {!fullscreen && (
           <header className="flex flex-wrap items-center justify-between gap-3">
@@ -123,20 +141,21 @@ export function ClockScreen({
           </div>
         )}
 
-        <div
-          className={cn(
-            "min-h-0 gap-4",
-            fullscreen
-              ? "grid h-full flex-1 grid-rows-2 gap-2 overflow-hidden md:grid-cols-2 md:grid-rows-1"
-              : "grid md:grid-cols-2",
-          )}
-        >
-          {(
-            [
-              { key: "p1" as const, label: "Player 1", time: times.p1 },
-              { key: "p2" as const, label: "Player 2", time: times.p2 },
-            ] as const
-          ).map((player) => {
+        <div className={cn("min-h-0", fullscreen && "flex min-h-0 flex-1 items-center justify-center overflow-hidden")}>
+          <div
+            className={cn(
+              "min-h-0 w-full gap-4",
+              fullscreen
+                ? "grid h-full flex-1 grid-rows-2 gap-2 overflow-hidden md:h-auto md:max-h-[min(72dvh,760px)] md:grid-cols-2 md:grid-rows-1"
+                : "grid md:grid-cols-2",
+            )}
+          >
+            {(
+              [
+                { key: "p1" as const, label: "Player 1", time: times.p1 },
+                { key: "p2" as const, label: "Player 2", time: times.p2 },
+              ] as const
+            ).map((player) => {
             const isActive = activePlayer === player.key
             const canSwitch = hasStarted && isActive && isRunning
             const canStart = !hasStarted && (times.p1 > 0 || times.p2 > 0)
@@ -147,45 +166,46 @@ export function ClockScreen({
 
             const status = !hasStarted ? "Ready" : isActive ? (isRunning ? "Running" : "Paused") : "Waiting"
 
-            return (
-              <button
-                key={player.key}
-                type="button"
-                onClick={onClick}
-                disabled={disabled}
-                className={cn(
-                  "min-h-0 transition",
-                  fullscreen && "flex h-full",
-                  !hasStarted ? "cursor-pointer" : canSwitch ? "cursor-pointer" : "cursor-not-allowed",
-                )}
-              >
-                <Card
+              return (
+                <button
+                  key={player.key}
+                  type="button"
+                  onClick={onClick}
+                  disabled={disabled}
                   className={cn(
-                    "flex h-full min-h-0 w-full flex-col items-center justify-center gap-3 px-4 text-center transition sm:gap-4 sm:px-6",
-                    fullscreen ? "py-4 sm:py-8" : "min-h-[200px] py-10",
-                    !hasStarted
-                      ? "border-border bg-card text-foreground"
-                      : isActive
-                        ? "border-primary/60 bg-card text-foreground shadow-lg"
-                        : "border-border bg-muted/40 text-muted-foreground",
+                    "min-h-0 transition",
+                    fullscreen && "flex h-full",
+                    !hasStarted ? "cursor-pointer" : canSwitch ? "cursor-pointer" : "cursor-not-allowed",
                   )}
                 >
-                  <div className={cn("text-sm uppercase tracking-[0.3em] text-muted-foreground", fullscreen && "text-xs sm:text-sm")}>
-                    {player.label}
-                  </div>
-                  <div
+                  <Card
                     className={cn(
-                      "font-semibold tabular-nums leading-none",
-                      fullscreen ? "text-5xl sm:text-6xl lg:text-7xl xl:text-8xl" : "text-5xl sm:text-6xl md:text-7xl",
+                      "flex h-full min-h-0 w-full flex-col items-center justify-center gap-3 px-4 text-center transition sm:gap-4 sm:px-6",
+                      fullscreen ? "py-4 sm:py-8" : "min-h-[200px] py-10",
+                      !hasStarted
+                        ? "border-border bg-card text-foreground"
+                        : isActive
+                          ? "border-primary/60 bg-card text-foreground shadow-lg"
+                          : "border-border bg-muted/40 text-muted-foreground",
                     )}
                   >
-                    {formatTime(player.time)}
-                  </div>
-                  <div className={cn("text-sm text-muted-foreground", fullscreen && "text-xs sm:text-sm")}>{status}</div>
-                </Card>
-              </button>
-            )
-          })}
+                    <div className={cn("text-sm uppercase tracking-[0.3em] text-muted-foreground", fullscreen && "text-xs sm:text-sm")}>
+                      {player.label}
+                    </div>
+                    <div
+                      className={cn(
+                        "font-semibold tabular-nums leading-none",
+                        fullscreen ? "text-5xl sm:text-6xl lg:text-7xl xl:text-8xl" : "text-5xl sm:text-6xl md:text-7xl",
+                      )}
+                    >
+                      {formatTime(player.time)}
+                    </div>
+                    <div className={cn("text-sm text-muted-foreground", fullscreen && "text-xs sm:text-sm")}>{status}</div>
+                  </Card>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {!fullscreen && (
