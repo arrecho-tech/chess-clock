@@ -12,10 +12,8 @@ type ClockScreenProps = {
   times: { p1: number; p2: number }
   muted: boolean
   fullscreen: boolean
-  theme: "light" | "dark"
   onMuteToggle: () => void
   onFullscreenToggle: () => void
-  onThemeToggle: () => void
   onOpenSetup: () => void
   onToggleRunning: () => void
   onReset: () => void
@@ -31,10 +29,8 @@ export function ClockScreen({
   times,
   muted,
   fullscreen,
-  theme,
   onMuteToggle,
   onFullscreenToggle,
-  onThemeToggle,
   onOpenSetup,
   onToggleRunning,
   onReset,
@@ -73,11 +69,7 @@ export function ClockScreen({
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" onClick={onMuteToggle}>
                 {muted ? "Unmute" : "Mute"}
-              </Button>
-              <Button variant="outline" onClick={onThemeToggle}>
-                Theme: {theme === "dark" ? "Dark" : "Light"}
-              </Button>
-              <Button variant="outline" onClick={onFullscreenToggle}>
+              </Button>              <Button variant="outline" onClick={onFullscreenToggle}>
                 {fullscreen ? "Exit Fullscreen" : "Fullscreen"}
               </Button>
               <Button variant="outline" onClick={onOpenSetup}>

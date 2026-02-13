@@ -9,7 +9,7 @@ function App() {
     return (
       <SetupScreen
         setup={clock.setup}
-        theme={clock.theme}
+        theme={clock.setup.theme}
         onSetupChange={clock.setSetup}
         onThemeToggle={() =>
           clock.setTheme((prev) => (prev === "dark" ? "light" : "dark"))
@@ -28,12 +28,8 @@ function App() {
       times={clock.times}
       muted={clock.muted}
       fullscreen={clock.fullscreen}
-      theme={clock.theme}
       onMuteToggle={() => clock.setMuted((prev) => !prev)}
       onFullscreenToggle={() => clock.setFullscreen((prev) => !prev)}
-      onThemeToggle={() =>
-        clock.setTheme((prev) => (prev === "dark" ? "light" : "dark"))
-      }
       onOpenSetup={clock.openSetup}
       onToggleRunning={clock.toggleRunning}
       onReset={clock.resetClock}

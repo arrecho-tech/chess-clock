@@ -9,6 +9,24 @@ const safeParseJson = <T,>(value: string | null): T | null => {
   }
 }
 
+const normalizeSettings = (value: Partial<Settings> | null): Settings => {
+  const legacyTheme = localStorage.getItem(THEME_KEY)
+  const theme: Theme =
+    value?.theme === "dark" || value?.theme === "light"
+      ? value.theme
+      : legacyTheme === "dark" || legacyTheme === "light"
+        ? legacyTheme
+        : defaultSettings.theme
+
+  return {
+    ...defaultSettings,
+    ...value,
+    theme,
+  }
+}
+
+export type Theme = "light" | "dark"
+
 export type Settings = {
   p1Minutes: number
   p1Seconds: number
@@ -16,6 +34,7 @@ export type Settings = {
   p2Seconds: number
   increment: number
   sameTime: boolean
+  theme: Theme
 }
 
 export type PlayerKey = "p1" | "p2"
@@ -26,7 +45,7 @@ type BeepState = {
 }
 
 const SETTINGS_KEY = "chessClockSettings"
-const THEME_KEY = "chessClockTheme"
+const THEME_KEY = "chessClockTheme" // legacy key: kept for migration
 const MUTE_KEY = "chessClockMuted"
 const FULLSCREEN_KEY = "chessClockFullscreen"
 
@@ -37,6 +56,7 @@ export const defaultSettings: Settings = {
   p2Seconds: 0,
   increment: 5,
   sameTime: true,
+  theme: "light",
 }
 
 const emptyBeepState: BeepState = {
@@ -76,17 +96,17 @@ const setScrollLock = (locked: boolean) => {
 
 export function useChessClock() {
   const [settings, setSettings] = useState<Settings>(() => {
-    const parsed = safeParseJson<Settings>(localStorage.getItem(SETTINGS_KEY))
-    return parsed ?? defaultSettings
+    const parsed = safeParseJson<Partial<Settings>>(localStorage.getItem(SETTINGS_KEY))
+    return normalizeSettings(parsed)
   })
 
   const [setup, setSetup] = useState<Settings>(() => {
-    const parsed = safeParseJson<Settings>(localStorage.getItem(SETTINGS_KEY))
-    return parsed ?? defaultSettings
+    const parsed = safeParseJson<Partial<Settings>>(localStorage.getItem(SETTINGS_KEY))
+    return normalizeSettings(parsed)
   })
 
   const [showSetup, setShowSetup] = useState(() => {
-    const parsed = safeParseJson<Settings>(localStorage.getItem(SETTINGS_KEY))
+    const parsed = safeParseJson<Partial<Settings>>(localStorage.getItem(SETTINGS_KEY))
     return parsed ? false : true
   })
 
@@ -94,8 +114,8 @@ export function useChessClock() {
   const [hasStarted, setHasStarted] = useState(false)
   const [isRunning, setIsRunning] = useState(false)
   const [times, setTimes] = useState(() => {
-    const parsed = safeParseJson<Settings>(localStorage.getItem(SETTINGS_KEY))
-    const initial = parsed ?? defaultSettings
+    const parsed = safeParseJson<Partial<Settings>>(localStorage.getItem(SETTINGS_KEY))
+    const initial = normalizeSettings(parsed)
     return {
       p1: toSeconds(initial.p1Minutes, initial.p1Seconds),
       p2: toSeconds(initial.p2Minutes, initial.p2Seconds),
@@ -109,17 +129,13 @@ export function useChessClock() {
   const [fullscreen, setFullscreen] = useState(
     () => localStorage.getItem(FULLSCREEN_KEY) === "true",
   )
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    const storedTheme = localStorage.getItem(THEME_KEY)
-    return storedTheme === "dark" || storedTheme === "light" ? storedTheme : "light"
-  })
+  // theme is stored inside settings
 
   const audioRef = useRef<AudioContext | null>(null)
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark")
-    localStorage.setItem(THEME_KEY, theme)
-  }, [theme])
+    document.documentElement.classList.toggle("dark", settings.theme === "dark")
+  }, [settings.theme])
 
   useEffect(() => {
     localStorage.setItem(MUTE_KEY, String(muted))
@@ -137,6 +153,7 @@ export function useChessClock() {
     }
 
     document.addEventListener("fullscreenchange", onFullscreenChange)
+    onFullscreenChange()
 
     return () => {
       document.removeEventListener("fullscreenchange", onFullscreenChange)
@@ -145,7 +162,6 @@ export function useChessClock() {
   }, [])
 
   useEffect(() => {
-    setScrollLock(fullscreen)
     const root = document.documentElement
 
     if (fullscreen) {
@@ -356,6 +372,23 @@ export function useChessClock() {
     setIsRunning((prev) => !prev)
   }, [activePlayer, hasStarted, times.p1, times.p2])
 
+  const setTheme = useCallback(
+    (next: Theme | ((prev: Theme) => Theme)) => {
+      setSettings((prev) => {
+        const resolved = typeof next === "function" ? next(prev.theme) : next
+        const updated = { ...prev, theme: resolved }
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated))
+        return updated
+      })
+
+      setSetup((prev) => {
+        const resolved = typeof next === "function" ? next(prev.theme) : next
+        return { ...prev, theme: resolved }
+      })
+    },
+    [],
+  )
+
   return {
     // State
     settings,
@@ -367,7 +400,7 @@ export function useChessClock() {
     times,
     muted,
     fullscreen,
-    theme,
+    theme: settings.theme,
     // Setters
     setSetup,
     setMuted,
