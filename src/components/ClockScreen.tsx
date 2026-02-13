@@ -51,7 +51,7 @@ export function ClockScreen({
     >
       <div
         className={cn(
-          "mx-auto flex h-full w-full flex-col overflow-hidden",
+          "mx-auto flex h-full w-full flex-col",
           fullscreen
             ? "max-w-[1280px] gap-2 px-2 pb-2 sm:gap-3 sm:px-4 sm:pb-4"
             : "max-w-5xl gap-6 p-4",
@@ -143,18 +143,17 @@ export function ClockScreen({
         {fullscreen && (
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card/85 px-2 py-2 backdrop-blur supports-[backdrop-filter]:bg-card/70 sm:px-3">
             <details className="group relative">
-              <summary className="list-none">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Instructions"
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              <summary
+                aria-label="Instructions"
+                title="Instructions"
+                className="list-none cursor-pointer select-none text-muted-foreground hover:text-foreground"
+              >
+                <span
+                  aria-hidden="true"
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-current text-[11px] font-semibold leading-none"
                 >
-                  <span aria-hidden="true" className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-current text-[11px] font-semibold leading-none">
-                    i
-                  </span>
-                </Button>
+                  i
+                </span>
               </summary>
               <div className="absolute left-0 top-full z-20 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-lg border border-border bg-card p-3 text-sm text-foreground shadow-lg">
                 <div className="font-medium">How to use</div>
