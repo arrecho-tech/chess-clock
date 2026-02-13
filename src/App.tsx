@@ -27,16 +27,16 @@ function App() {
       isRunning={clock.isRunning}
       times={clock.times}
       muted={clock.muted}
-      vibrationEnabled={clock.vibrationEnabled}
-      vibrationSupported={clock.vibrationSupported}
+      fullscreen={clock.fullscreen}
       theme={clock.theme}
       onMuteToggle={() => clock.setMuted((prev) => !prev)}
-      onVibrationToggle={() => clock.setVibrationEnabled((prev) => !prev)}
+      onFullscreenToggle={() => clock.setFullscreen((prev) => !prev)}
       onThemeToggle={() =>
         clock.setTheme((prev) => (prev === "dark" ? "light" : "dark"))
       }
       onOpenSetup={clock.openSetup}
       onToggleRunning={clock.toggleRunning}
+      onReset={clock.resetClock}
       onStartFrom={clock.startFrom}
       onSwitch={clock.handleSwitch}
     />

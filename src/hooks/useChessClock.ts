@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 export type Settings = {
   p1Minutes: number
@@ -19,7 +19,7 @@ type BeepState = {
 const SETTINGS_KEY = "chessClockSettings"
 const THEME_KEY = "chessClockTheme"
 const MUTE_KEY = "chessClockMuted"
-const VIBRATE_KEY = "chessClockVibrate"
+const FULLSCREEN_KEY = "chessClockFullscreen"
 
 export const defaultSettings: Settings = {
   p1Minutes: 10,
@@ -62,14 +62,10 @@ export function useChessClock() {
 
   const [beeped, setBeeped] = useState<BeepState>(emptyBeepState)
   const [muted, setMuted] = useState(false)
-  const [vibrationEnabled, setVibrationEnabled] = useState(false)
+  const [fullscreen, setFullscreen] = useState(false)
   const [theme, setTheme] = useState<"light" | "dark">("light")
 
   const audioRef = useRef<AudioContext | null>(null)
-  const vibrationSupported = useMemo(
-    () => typeof navigator !== "undefined" && "vibrate" in navigator,
-    [],
-  )
 
   useEffect(() => {
     const stored = localStorage.getItem(SETTINGS_KEY)
@@ -98,9 +94,9 @@ export function useChessClock() {
       setMuted(true)
     }
 
-    const storedVibrate = localStorage.getItem(VIBRATE_KEY)
-    if (storedVibrate === "true") {
-      setVibrationEnabled(true)
+    const storedFullscreen = localStorage.getItem(FULLSCREEN_KEY)
+    if (storedFullscreen === "true") {
+      setFullscreen(true)
     }
   }, [])
 
@@ -114,8 +110,8 @@ export function useChessClock() {
   }, [muted])
 
   useEffect(() => {
-    localStorage.setItem(VIBRATE_KEY, String(vibrationEnabled))
-  }, [vibrationEnabled])
+    localStorage.setItem(FULLSCREEN_KEY, String(fullscreen))
+  }, [fullscreen])
 
   useEffect(() => {
     setTimes({
@@ -167,7 +163,7 @@ export function useChessClock() {
         const gain = ctx.createGain()
         oscillator.type = "sine"
         oscillator.frequency.value = frequency
-        gain.gain.value = 0.04
+        gain.gain.value = 0.5
         oscillator.connect(gain)
         gain.connect(ctx.destination)
         oscillator.start()
@@ -178,11 +174,6 @@ export function useChessClock() {
     },
     [muted],
   )
-
-  const triggerVibration = useCallback(() => {
-    if (!vibrationSupported || !vibrationEnabled) return
-    navigator.vibrate?.(30)
-  }, [vibrationEnabled, vibrationSupported])
 
   const handleSwitch = useCallback(() => {
     if (!isRunning) return
@@ -202,7 +193,6 @@ export function useChessClock() {
     })
     setActivePlayer((prev) => (prev === "p1" ? "p2" : "p1"))
     playBeep()
-    triggerVibration()
   }, [
     activePlayer,
     hasStarted,
@@ -211,7 +201,6 @@ export function useChessClock() {
     settings.increment,
     times.p1,
     times.p2,
-    triggerVibration,
   ])
 
   useEffect(() => {
@@ -292,6 +281,17 @@ export function useChessClock() {
     [times.p1, times.p2],
   )
 
+  const resetClock = useCallback(() => {
+    setTimes({
+      p1: toSeconds(settings.p1Minutes, settings.p1Seconds),
+      p2: toSeconds(settings.p2Minutes, settings.p2Seconds),
+    })
+    setActivePlayer(null)
+    setHasStarted(false)
+    setIsRunning(false)
+    setBeeped(emptyBeepState)
+  }, [settings])
+
   const toggleRunning = useCallback(() => {
     if (!hasStarted) return
     if (!activePlayer) return
@@ -314,15 +314,15 @@ export function useChessClock() {
     isRunning,
     times,
     muted,
-    vibrationEnabled,
-    vibrationSupported,
+    fullscreen,
     theme,
     // Setters
     setSetup,
     setMuted,
-    setVibrationEnabled,
+    setFullscreen,
     setTheme,
     // Actions
+    resetClock,
     handleSwitch,
     handleSaveSetup,
     openSetup,

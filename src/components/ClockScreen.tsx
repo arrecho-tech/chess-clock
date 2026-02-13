@@ -11,14 +11,14 @@ type ClockScreenProps = {
   isRunning: boolean
   times: { p1: number; p2: number }
   muted: boolean
-  vibrationEnabled: boolean
-  vibrationSupported: boolean
+  fullscreen: boolean
   theme: "light" | "dark"
   onMuteToggle: () => void
-  onVibrationToggle: () => void
+  onFullscreenToggle: () => void
   onThemeToggle: () => void
   onOpenSetup: () => void
   onToggleRunning: () => void
+  onReset: () => void
   onStartFrom: (player: PlayerKey) => void
   onSwitch: () => void
 }
@@ -30,69 +30,83 @@ export function ClockScreen({
   isRunning,
   times,
   muted,
-  vibrationEnabled,
-  vibrationSupported,
+  fullscreen,
   theme,
   onMuteToggle,
-  onVibrationToggle,
+  onFullscreenToggle,
   onThemeToggle,
   onOpenSetup,
   onToggleRunning,
+  onReset,
   onStartFrom,
   onSwitch,
 }: ClockScreenProps) {
+  const gameOver =
+    hasStarted && ((activePlayer === "p1" && times.p1 === 0) || (activePlayer === "p2" && times.p2 === 0))
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 p-4">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="flex items-center gap-2 text-xl font-semibold">
-              <svg aria-hidden="true" viewBox="0 0 512 512" className="h-5 w-5">
-                <path
-                  fill="currentColor"
-                  transform="translate(96 0)"
-                  d="M264 136c0 37.1-19.4 69.6-48.6 88H224c17.7 0 32 14.3 32 32s-14.3 32-32 32c0 96 24 128 24 128H72s24-32 24-128c-17.7 0-32-14.3-32-32s14.3-32 32-32h8.5C75.4 205.6 56 173.1 56 136C56 78.6 102.6 32 160 32s104 46.6 104 104zM32 448H288c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32z"
-                />
-              </svg>
-              Chess Clock
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Tap either timer to start, then tap the active timer (or press
-              Space) to switch.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" onClick={onMuteToggle}>
-              {muted ? "Unmute" : "Mute"}
-            </Button>
-            {vibrationSupported && (
-              <Button variant="outline" onClick={onVibrationToggle}>
-                {vibrationEnabled ? "Vibration On" : "Vibration Off"}
+      <div
+        className={cn(
+          "mx-auto flex min-h-screen w-full flex-col gap-6",
+          fullscreen ? "max-w-full p-2" : "max-w-5xl p-4",
+        )}
+      >
+        {!fullscreen && (
+          <header className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 className="flex items-center gap-2 text-xl font-semibold">
+                <svg aria-hidden="true" viewBox="0 0 512 512" className="h-5 w-5">
+                  <path
+                    fill="currentColor"
+                    transform="translate(96 0)"
+                    d="M264 136c0 37.1-19.4 69.6-48.6 88H224c17.7 0 32 14.3 32 32s-14.3 32-32 32c0 96 24 128 24 128H72s24-32 24-128c-17.7 0-32-14.3-32-32s14.3-32 32-32h8.5C75.4 205.6 56 173.1 56 136C56 78.6 102.6 32 160 32s104 46.6 104 104zM32 448H288c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32z"
+                  />
+                </svg>
+                Chess Clock
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Tap either timer to start, then tap the active timer (or press
+                Space) to switch.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" onClick={onMuteToggle}>
+                {muted ? "Unmute" : "Mute"}
               </Button>
-            )}
-            <Button variant="outline" onClick={onThemeToggle}>
-              Theme: {theme === "dark" ? "Dark" : "Light"}
-            </Button>
-            <Button variant="outline" onClick={onOpenSetup}>
-              Settings
-            </Button>
-
-            {hasStarted ? (
-              <Button className="w-[170px]" onClick={onToggleRunning}>
-                {isRunning ? "Pause" : "Resume"}
+              <Button variant="outline" onClick={onThemeToggle}>
+                Theme: {theme === "dark" ? "Dark" : "Light"}
               </Button>
-            ) : (
-              <div
-                className="inline-flex h-10 w-[170px] items-center justify-center rounded-md border border-border bg-muted px-4 text-sm font-medium text-muted-foreground"
-                aria-live="polite"
-              >
-                Tap a clock to start
-              </div>
-            )}
-          </div>
-        </header>
+              <Button variant="outline" onClick={onFullscreenToggle}>
+                {fullscreen ? "Exit Fullscreen" : "Fullscreen"}
+              </Button>
+              <Button variant="outline" onClick={onOpenSetup}>
+                Settings
+              </Button>
 
-        <div className="grid gap-4 md:grid-cols-2">
+              {hasStarted && (
+                <Button variant="outline" onClick={onReset}>
+                  Reset
+                </Button>
+              )}
+
+              {hasStarted ? (
+                <Button className="w-[170px]" onClick={gameOver ? onReset : onToggleRunning}>
+                  {gameOver ? "New Game" : isRunning ? "Pause" : "Resume"}
+                </Button>
+              ) : (
+                <div
+                  className="inline-flex h-10 w-[170px] items-center justify-center rounded-md border border-border bg-muted px-4 text-sm font-medium text-muted-foreground"
+                  aria-live="polite"
+                >
+                  Tap a clock to start
+                </div>
+              )}
+            </div>
+          </header>
+        )}
+
+        <div className={cn("grid gap-4 md:grid-cols-2", fullscreen && "flex-1")}>
           {(
             [
               { key: "p1" as const, label: "Player 1", time: times.p1 },
@@ -127,6 +141,7 @@ export function ClockScreen({
                 disabled={disabled}
                 className={cn(
                   "transition",
+                  fullscreen && "flex-1",
                   !hasStarted
                     ? "cursor-pointer"
                     : canSwitch
@@ -136,7 +151,8 @@ export function ClockScreen({
               >
                 <Card
                   className={cn(
-                    "flex h-full min-h-[200px] flex-col items-center justify-center gap-4 px-6 py-10 text-center transition",
+                    "flex h-full flex-col items-center justify-center gap-4 px-6 text-center transition",
+                    fullscreen ? "min-h-full py-16" : "min-h-[200px] py-10",
                     !hasStarted
                       ? "border-border bg-card text-foreground"
                       : isActive
@@ -144,29 +160,61 @@ export function ClockScreen({
                         : "border-border bg-muted/40 text-muted-foreground",
                   )}
                 >
-                  <div className="text-sm uppercase tracking-[0.3em] text-muted-foreground">
-                    {player.label}
-                  </div>
-                  <div className="text-5xl font-semibold tabular-nums sm:text-6xl md:text-7xl">
+                  {!fullscreen && (
+                    <div className="text-sm uppercase tracking-[0.3em] text-muted-foreground">
+                      {player.label}
+                    </div>
+                  )}
+                  <div
+                    className={cn(
+                      "font-semibold tabular-nums",
+                      fullscreen
+                        ? "text-7xl sm:text-8xl md:text-9xl"
+                        : "text-5xl sm:text-6xl md:text-7xl",
+                    )}
+                  >
                     {formatTime(player.time)}
                   </div>
-                  <div className="text-sm text-muted-foreground">{status}</div>
+                  {!fullscreen && (
+                    <div className="text-sm text-muted-foreground">{status}</div>
+                  )}
                 </Card>
               </button>
             )
           })}
         </div>
 
-        <footer className="mt-auto flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card/80 p-4 text-sm text-muted-foreground">
-          <div>Increment: +{settings.increment}s</div>
-          <div>
-            {settings.sameTime
-              ? `Both: ${formatTime(toSeconds(settings.p1Minutes, settings.p1Seconds))}`
-              : `P1 ${formatTime(toSeconds(settings.p1Minutes, settings.p1Seconds))} · P2 ${formatTime(
-                  toSeconds(settings.p2Minutes, settings.p2Seconds),
-                )}`}
+        {fullscreen ? (
+          <div className="flex items-center justify-center gap-3 py-2">
+            <Button variant="outline" size="sm" onClick={onMuteToggle}>
+              {muted ? "Unmute" : "Mute"}
+            </Button>
+            {hasStarted && (
+              <Button variant="outline" size="sm" onClick={onReset}>
+                Reset
+              </Button>
+            )}
+            {hasStarted && (
+              <Button size="sm" onClick={gameOver ? onReset : onToggleRunning}>
+                {gameOver ? "New Game" : isRunning ? "Pause" : "Resume"}
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={onFullscreenToggle}>
+              Exit Fullscreen
+            </Button>
           </div>
-        </footer>
+        ) : (
+          <footer className="mt-auto flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card/80 p-4 text-sm text-muted-foreground">
+            <div>Increment: +{settings.increment}s</div>
+            <div>
+              {settings.sameTime
+                ? `Both: ${formatTime(toSeconds(settings.p1Minutes, settings.p1Seconds))}`
+                : `P1 ${formatTime(toSeconds(settings.p1Minutes, settings.p1Seconds))} · P2 ${formatTime(
+                    toSeconds(settings.p2Minutes, settings.p2Seconds),
+                  )}`}
+            </div>
+          </footer>
+        )}
       </div>
     </div>
   )
