@@ -80,9 +80,20 @@ export function ClockScreen({
                 </svg>
                 Chess Clock
               </h1>
-              <p className="text-sm text-muted-foreground">
-                Tap either timer to start, then tap the active timer (or press Space) to switch.
-              </p>
+              <details className="group relative mt-1 w-fit">
+                <summary className="list-none cursor-pointer select-none text-sm text-muted-foreground underline decoration-dotted underline-offset-4 hover:text-foreground">
+                  Instructions
+                </summary>
+                <div className="absolute left-0 top-full z-20 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-lg border border-border bg-card p-3 text-sm text-foreground shadow-lg">
+                  <div className="font-medium">How to use</div>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
+                    <li>Tap either clock to start.</li>
+                    <li>Tap the active clock (or press Space) to switch turns.</li>
+                    <li>Use Settings to change times/increment.</li>
+                  </ul>
+                  <div className="mt-2 text-xs text-muted-foreground">Tip: tap outside to close on mobile.</div>
+                </div>
+              </details>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" onClick={onMuteToggle}>
@@ -119,7 +130,19 @@ export function ClockScreen({
 
         {fullscreen && (
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card/85 px-2 py-2 backdrop-blur supports-[backdrop-filter]:bg-card/70 sm:px-3">
-            <div className="text-xs text-muted-foreground sm:text-sm">Tap active clock (or Space) to switch</div>
+            <details className="group relative">
+              <summary className="list-none cursor-pointer select-none text-xs text-muted-foreground underline decoration-dotted underline-offset-4 hover:text-foreground sm:text-sm">
+                Instructions
+              </summary>
+              <div className="absolute left-0 top-full z-20 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-lg border border-border bg-card p-3 text-sm text-foreground shadow-lg">
+                <div className="font-medium">How to use</div>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
+                  <li>Tap the active clock (or press Space) to switch turns.</li>
+                  <li>Reset starts a new game with current settings.</li>
+                  <li>Exit Fullscreen is always available here.</li>
+                </ul>
+              </div>
+            </details>
             <div className="flex flex-wrap items-center justify-end gap-2">
               <Button variant="outline" size="sm" onClick={onMuteToggle}>
                 {muted ? "Unmute" : "Mute"}
@@ -146,7 +169,7 @@ export function ClockScreen({
             className={cn(
               "min-h-0 w-full gap-4",
               fullscreen
-                ? "grid h-full flex-1 grid-rows-2 gap-2 overflow-hidden md:h-auto md:max-h-[min(72dvh,760px)] md:grid-cols-2 md:grid-rows-1"
+                ? "grid h-full flex-1 grid-rows-2 gap-2 overflow-hidden md:h-auto md:max-h-[min(84dvh,860px)] md:grid-cols-2 md:grid-rows-1"
                 : "grid md:grid-cols-2",
             )}
           >
